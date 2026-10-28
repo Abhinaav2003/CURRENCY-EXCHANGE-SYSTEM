@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: currency-exchange
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/rates
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

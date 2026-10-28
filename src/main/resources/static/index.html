@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Currency Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap">
+<style>
+:root{
+  --bg:#e9eef3; --card:#ffffff; --ink:#0f1c2e; --muted:#5f6c7d;
+  --line:#d8e0e8; --field:#f3f6f9; --accent:#0b7a6b; --accent-ink:#ffffff; --warn:#b42318;
+  --shadow:0 1px 2px rgba(15,28,46,.06),0 12px 32px rgba(15,28,46,.08);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b141f; --card:#132131; --ink:#e8eef5; --muted:#8fa0b3;
+  --line:#243548; --field:#0e1a28; --accent:#34c5ad; --accent-ink:#06211c; --warn:#ff8a7a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.35);
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--ink);min-height:100vh;
+  display:grid;place-items:center;padding:24px 16px;
+  padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom));
+}
+.card{width:100%;max-width:440px;background:var(--card);border-radius:24px;padding:28px 24px 24px;box-shadow:var(--shadow)}
+h1{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+.sub{margin:0 0 24px;color:var(--muted);font-size:14px}
+
+.field{background:var(--field);border:1.5px solid transparent;border-radius:16px;padding:12px 14px 14px;transition:border-color .15s}
+.field:focus-within{border-color:var(--accent)}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.row{display:flex;align-items:center;gap:10px}
+input,select{font:inherit;color:var(--ink);background:transparent;border:0;outline:0;min-width:0}
+input{flex:1;font-size:28px;font-weight:800;width:100%;font-variant-numeric:tabular-nums}
+select{
+  font-size:16px;font-weight:700;padding:8px 28px 8px 12px;border-radius:12px;cursor:pointer;
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238fa0b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center;
+  appearance:none;-webkit-appearance:none;border:1px solid var(--line);
+}
+select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.swap-wrap{display:flex;justify-content:center;height:0;position:relative;z-index:1}
+#swap{
+  position:relative;top:-18px;width:44px;height:44px;border-radius:50%;
+  border:4px solid var(--card);background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;cursor:pointer;padding:0;transition:transform .25s ease;
+}
+#swap:hover{transform:rotate(180deg)}
+#swap svg{width:18px;height:18px}
+.gap{height:10px}
+
+.result{margin-top:22px;padding:4px 4px 0}
+.result .label{font-size:14px;color:var(--muted);margin:0 0 4px;min-height:20px}
+#out{font-size:40px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin:0;font-variant-numeric:tabular-nums;word-break:break-word}
+#out .cur{font-size:20px;font-weight:600;color:var(--muted);margin-left:6px;letter-spacing:0}
+#out.loading{opacity:.35}
+#rate{margin:10px 0 0;font-size:14px;font-weight:600}
+#err{margin:10px 0 0;font-size:14px;color:var(--warn);min-height:0}
+.foot{display:flex;align-items:center;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<main class="card">
+  <h1>Currency Exchange</h1>
+  <p class="sub">Convert between currencies at the latest rates.</p>
+
+  <div class="field">
+    <label for="amount">Amount</label>
+    <div class="row">
+      <input id="amount" type="number" inputmode="decimal" value="1" min="0" step="any">
+      <select id="from" aria-label="From currency"></select>
+    </div>
+  </div>
+
+  <div class="swap-wrap">
+    <button id="swap" type="button" aria-label="Swap currencies">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v14M3 14l4 4 4-4M17 20V6M13 10l4-4 4 4"/></svg>
+    </button>
+  </div>
+  <div class="gap"></div>
+
+  <div class="field">
+    <label for="to">Converted to</label>
+    <div class="row"><select id="to" style="width:100%"></select></div>
+  </div>
+
+  <section class="result" aria-live="polite">
+    <p class="label" id="label"></p>
+    <p id="out">—</p>
+    <p id="rate"></p>
+    <p id="err" role="alert"></p>
+  </section>
+
+  <div class="foot"><span class="dot"></span><span id="date">Loading rates…</span></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const amount = $('amount'), from = $('from'), to = $('to'), out = $('out');
+let timer, reqId = 0;
+
+const fmt = (n, max = 4) =>
+  new Intl.NumberFormat(undefined, { maximumFractionDigits: max }).format(n);
+
+async function init() {
+  try {
+    const d = await (await fetch('/api/rates')).json();
+    const codes = Object.keys(d.rates);
+    for (const el of [from, to]) el.innerHTML = codes.map(c => `<option>${c}</option>`).join('');
+    from.value = 'USD'; to.value = 'INR';
+    $('date').textContent = 'Rates as of ' + d.date;
+    convert();
+  } catch {
+    $('date').textContent = 'Rates unavailable';
+    $('err').textContent = 'Could not load currencies. Check your connection and refresh.';
+  }
+}
+
+async function convert() {
+  const id = ++reqId;
+  const amt = amount.value;
+  $('err').textContent = '';
+  if (amt === '' || Number(amt) < 0) { out.textContent = '—'; $('rate').textContent = ''; $('label').textContent = ''; return; }
+  out.classList.add('loading');
+  try {
+    const r = await (await fetch(`/api/convert?from=${from.value}&to=${to.value}&amount=${amt}`)).json();
+    if (id !== reqId) return; // ignore stale responses
+    $('label').textContent = `${fmt(r.amount, 6)} ${r.from} =`;
+    out.innerHTML = `${fmt(r.result, 4)}<span class="cur">${r.to}</span>`;
+    const unit = Number(r.amount) ? r.result / r.amount : null;
+    $('rate').textContent = unit ? `1 ${r.from} = ${fmt(unit, 4)} ${r.to}` : '';
+  } catch {
+    if (id !== reqId) return;
+    $('err').textContent = 'Conversion failed. Try again.';
+  } finally {
+    if (id === reqId) out.classList.remove('loading');
+  }
+}
+
+const schedule = () => { clearTimeout(timer); timer = setTimeout(convert, 250); };
+amount.addEventListener('input', schedule);
+from.addEventListener('change', convert);
+to.addEventListener('change', convert);
+$('swap').addEventListener('click', () => { [from.value, to.value] = [to.value, from.value]; convert(); });
+init();
+</script>
+</body></html>
