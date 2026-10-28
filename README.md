@@ -1,4 +1,8 @@
-# Currency Exchange (Spring Boot)
+<h1 align="center">CURRENCY EXCHANGE SYSTEM</h1>
+
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=java,spring,hibernate,postgres,maven,docker" alt="Tech stack icons" />
+</p>
 
 Rates are fetched daily (00:30 UTC) from open.er-api.com, plus on startup and
 automatically if the newest stored data is older than today.
